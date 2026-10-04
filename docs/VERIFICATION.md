@@ -49,3 +49,17 @@ Repeated lint, formatting, typecheck, all 37 unit tests, production build and al
 - Clean installation/build/tests were repeated in an isolated source directory. Provider and DB flows were tested against the real local running stack, not a newly provisioned cloud environment.
 
 The MVP is locally verified. These results do not establish suitability as an emergency warning system or a broadly public unmoderated service.
+
+## Deployment preparation verification
+
+On 2026-10-04, after deployment configuration changes:
+
+- Lint, all-workspace typecheck, formatting and production build passed. All **46 tests** across six files passed, including nine deployment environment security tests.
+- All **18 integration checks** passed against the compiled production API serving the compiled frontend on the same local origin. A first attempt had no provider network access under the local sandbox and correctly returned 503; the unchanged checks passed after the API was restarted with authorized network access.
+- Frontend HTML and hashed assets returned 200; hashed assets had immutable caching. Unknown API routes and `.env` returned JSON 404 instead of leaking files or serving HTML.
+- Same-origin browser smoke check showed all five real modeled weather markers, rendered river paths, visibly DEMO river detail and connected real-time status. Captured browser error/warning logs were empty. A 390×844 viewport had no horizontal overflow; temporary viewport overrides were cleared.
+- An isolated, initially extension-free local database passed fresh `gis` PostGIS setup, both migrations, repeated idempotent migration runs, GiST-index/RLS verification and a real spatial intersection. That temporary database was removed after the check.
+- Supabase Free project is active: PostgreSQL 17/PostGIS 3.3.7 in `gis`, migrations 1 and 2, expected tables/indexes, successful spatial query and zero reports. Anonymous/authenticated Data API table access is revoked. Security advisor has no error/warning findings; three informational no-policy findings reflect deliberate denial of direct browser database access.
+- MVP commit `9112080` was pushed normally to the public GitHub repository and its remote SHA matched local HEAD. The initial publication scan covered all 76 publishable files with zero findings.
+
+**Public deployment remains pending Render sign-in and private backend database connection configuration.** HTTPS/public endpoint checks, public browser E2E, public two-client WebSockets and deployed persistence/log verification have not been performed. No public frontend/backend URL is claimed. The [deployment guide](DEPLOYMENT.md) records the selected free architecture, remaining steps and acceptance checklist.

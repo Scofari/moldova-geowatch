@@ -6,6 +6,14 @@ import { migrate } from './migrate.js';
 export class Database implements OnModuleInit, OnModuleDestroy {
   readonly pool = new Pool({
     connectionString: env.DATABASE_URL,
+    options: '-c search_path=public,gis,extensions',
+    ssl:
+      env.DATABASE_SSL === 'true'
+        ? {
+            rejectUnauthorized: true,
+            ...(env.DATABASE_CA_CERT ? { ca: env.DATABASE_CA_CERT } : {}),
+          }
+        : false,
     max: 10,
     connectionTimeoutMillis: 5000,
     statement_timeout: 10000,

@@ -4,6 +4,10 @@ An open-data geospatial dashboard for Moldova: current weather models, real rive
 
 ![Dashboard screenshot](docs/screenshots/dashboard.jpg)
 
+## Live Demo
+
+Public deployment is pending Render account authorization. No public application URL has been verified yet. The source is available at [Scofari/moldova-geowatch](https://github.com/Scofari/moldova-geowatch).
+
 ## What it does
 
 Explore a real interactive map, inspect weather conditions, read clearly marked sample river levels, and report a local problem. Another connected browser receives new reports and confirmations immediately.
@@ -61,7 +65,7 @@ Reports use `geography(Point,4326)`; a GiST expression index over `location::geo
 
 Node.js >=22, npm workspaces, React 19, TypeScript, Vite 7, TanStack Query, Leaflet, NestJS 11, Socket.IO, PostgreSQL 17/PostGIS 3.5, Zod, Vitest, ESLint and Prettier. Docker Desktop/Engine is needed only for the local database. No mandatory cloud or paid API.
 
-## Getting Started
+## Local Development
 
 Start Docker first. From the repository root:
 
@@ -88,7 +92,13 @@ npm run start -w @geowatch/api
 npm run preview -w @geowatch/web
 ```
 
-Before production-mode API startup, set `NODE_ENV=production`, a private random `IP_HASH_SALT`, and the actual `WEB_ORIGIN` (preview defaults to http://127.0.0.1:4173). Restart after environment changes. The preview proxies API/WebSocket requests locally. For deployment, use HTTPS and a same-origin reverse proxy to the API; localhost binding is intentional. No deployment is required by this project.
+Before production-mode API startup, explicitly set `DATABASE_URL`, `NODE_ENV=production`, a private random `IP_HASH_SALT`, and the actual `WEB_ORIGIN` (preview defaults to http://127.0.0.1:4173). Set `DATABASE_SSL=false` only for the local database. Restart after environment changes. The preview proxies API/WebSocket requests locally.
+
+## Production Deployment
+
+The selected €0 architecture uses one Render Free Node service for the frontend, NestJS API and Socket.IO, plus Supabase Free PostgreSQL/PostGIS. The backend serves the compiled Vite frontend on the same HTTPS origin, so relative API/WebSocket URLs work without exposing backend secrets to the browser. Render handles HTTPS; the database connection verifies TLS certificates.
+
+The cloud database is provisioned and its migrations/indexes verified; application deployment awaits Render sign-in and private database connection configuration. See [deployment instructions, costs, limitations and pending public checks](docs/DEPLOYMENT.md). The committed [Render Blueprint](render.yaml) explicitly selects Free compute. No public deployment success is claimed.
 
 ## Environment Variables
 
@@ -98,6 +108,10 @@ Copy the root [.env.example](.env.example); it contains commented placeholders, 
 | ------------------ | -------------------------------------------------------------------------------------- |
 | DATABASE_URL       | Local PostGIS connection, backend only                                                 |
 | PORT               | API port 3001; Vite local proxy follows it                                             |
+| HOST               | Local bind 127.0.0.1; Render uses 0.0.0.0                                              |
+| SERVE_WEB          | false locally; true serves the compiled frontend through NestJS                        |
+| DATABASE_SSL       | false in development; verified TLS defaults to true in production                      |
+| DATABASE_CA_CERT   | Optional provider CA certificate for backend TLS verification                          |
 | WEB_ORIGIN         | Allowed HTTP/WebSocket origin, default http://127.0.0.1:5173                           |
 | IP_HASH_SALT       | Minimum 32 characters; private production salt required                                |
 | NODE_ENV           | development, test or production                                                        |
@@ -201,7 +215,7 @@ scripts/                  # reproducible data import + integration checks
 docs/                     # provenance, API, LuciadRIA, verification
 ```
 
-## Current Limitations
+## Limitations
 
 - No verified public machine-readable Moldova water-level feed with clear reuse terms was found. DEMO levels do not track real rivers.
 - LuciadRIA rendering cannot be implemented/verified against an absent proprietary SDK/license; the customer integration remains external.
