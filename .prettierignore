@@ -1,0 +1,7 @@
+node_modules
+dist
+package-lock.json
+apps/api/data/*.json
+apps/web/public/data/*.json
+.runtime
+

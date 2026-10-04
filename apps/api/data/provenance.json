@@ -1,0 +1,10 @@
+{
+  "revision": "v5.1.2",
+  "retrievedAt": "2026-10-04T17:31:00.347Z",
+  "sources": [
+    "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_admin_0_countries.geojson",
+    "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_rivers_lake_centerlines.geojson",
+    "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_populated_places.geojson"
+  ],
+  "transformations": "Filter country ADM0_A3=MDA, rivers by names, normalize property names; geometry retained without invented vertices."
+}
