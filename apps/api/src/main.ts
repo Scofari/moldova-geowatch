@@ -19,6 +19,8 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.use(
     helmet({
+      // OSM tiles require a Referer; send only the origin across sites.
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
