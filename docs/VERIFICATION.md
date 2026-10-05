@@ -45,7 +45,7 @@ Repeated lint, formatting, typecheck, all 37 unit tests, production build and al
 
 - Actual LuciadRIA rendering: unavailable SDK/license; only the legal integration boundary is supplied.
 - Live river water observations: no verified permitted machine-readable source connected.
-- Real mobile hardware/touch behavior, public deployment, multi-instance operation and large-data performance were not tested.
+- Real mobile hardware/touch behavior, multi-instance operation and large-data performance were not tested. Public deployment was subsequently verified below.
 - Clean installation/build/tests were repeated in an isolated source directory. Provider and DB flows were tested against the real local running stack, not a newly provisioned cloud environment.
 
 The MVP is locally verified. These results do not establish suitability as an emergency warning system or a broadly public unmoderated service.
@@ -62,4 +62,31 @@ On 2026-10-04, after deployment configuration changes:
 - Supabase Free project is active: PostgreSQL 17/PostGIS 3.3.7 in `gis`, migrations 1 and 2, expected tables/indexes, successful spatial query and zero reports. Anonymous/authenticated Data API table access is revoked. Security advisor has no error/warning findings; three informational no-policy findings reflect deliberate denial of direct browser database access.
 - MVP commit `9112080` was pushed normally to the public GitHub repository and its remote SHA matched local HEAD. The initial publication scan covered all 76 publishable files with zero findings.
 
-**Public deployment remains pending Render sign-in and private backend database connection configuration.** HTTPS/public endpoint checks, public browser E2E, public two-client WebSockets and deployed persistence/log verification have not been performed. No public frontend/backend URL is claimed. The [deployment guide](DEPLOYMENT.md) records the selected free architecture, remaining steps and acceptance checklist.
+## Public deployment verification
+
+Completed on 2026-10-05 against **https://moldova-geowatch.onrender.com/**. The report workflow was tested on `8b737bc`; the map-header correction `c34c19a` was subsequently deployed and verified. Documentation-only commits preserve the verified application runtime.
+
+| Check                   | Result                                                                                                                                                    |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public HTTPS health     | 200; database connected, PostGIS 3.3.7, OSS map provider, DEMO river observations                                                                         |
+| Public endpoints        | Weather, Orhei search, rivers, reports and bbox queries return expected real data                                                                         |
+| WebSockets              | Two independent WSS-only clients connect and receive creation/confirmation events                                                                         |
+| Browser report workflow | One explicitly labelled temporary Other report created through the public UI; reload preserves title, coordinates and description                         |
+| Second browser          | Creation and confirmation count appear without reload; first detail panel records confirmation                                                            |
+| Spatial/filter rules    | Bbox inclusion/exclusion and category exclusion pass; reversed bbox returns 400; UI Flooding filter hides the Other record                                |
+| Write protections       | Duplicate confirmation returns 409; foreign-origin confirmation returns 403                                                                               |
+| Map and layers          | Actual OSM tiles render; map drag changes pane position; Orhei selection zooms from 50 km to 2 km; weather and river toggles work                         |
+| Data provenance         | Five actual modeled weather markers and weather details; Nistru/Prut geometry; fixed water readings visibly DEMO                                          |
+| Mobile                  | 390×844 viewport, scroll width 390; layers drawer opens/focuses its close control; river details accessible                                               |
+| Browser security        | No captured warning/error messages after final reload; HTTPS/WSS and HTTPS tiles; no mixed-content issues observed                                        |
+| Backend logs            | Successful deploy/startup and current application logs reviewed; no unexpected runtime errors observed                                                    |
+| Test cleanup            | Exact test UUID plus title/description guard removed only the temporary report; reports and confirmations both zero afterwards; migrations remain 1 and 2 |
+| Repository checks       | Lint, typecheck, all 46 tests, build and formatting pass after the header correction                                                                      |
+
+The initial deploy failed because the CA certificate was missing, then PostgreSQL rejected the configured password. The official CA was added with certificate validation intact, and the owner corrected the private connection credentials. The live application has no database secrets in its browser bundle or repository.
+
+The first public screenshot exposed blocked OSM tiles: the production server used Helmet's default `no-referrer` policy. The fix explicitly sets `strict-origin-when-cross-origin`. The public response header, actual tile rendering and empty captured console error/warning list were verified after redeploy. No proxy, user-agent spoofing or alternative paid tile service was introduced.
+
+Public screenshots: [desktop](screenshots/public-desktop.jpg), [mobile](screenshots/public-mobile.jpg). They show the live public site after test cleanup, with actual weather at capture time. Temporary viewport overrides were cleared. See [deployment instructions and free-tier limits](DEPLOYMENT.md).
+
+The final publication scan covered repository text and existing commit history with no private-key, recognizable-token, nonlocal database-credential or machine-path matches. Public screenshots were visually reviewed; local runtime files and the downloaded public CA remain ignored.

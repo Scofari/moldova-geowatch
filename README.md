@@ -2,11 +2,13 @@
 
 An open-data geospatial dashboard for Moldova: current weather models, real river geometry and anonymous community reports. Designed for local, zero-subscription-cost development and extensible country coverage.
 
-![Dashboard screenshot](docs/screenshots/dashboard.jpg)
+![Public dashboard screenshot](docs/screenshots/public-desktop.jpg)
 
 ## Live Demo
 
-Public deployment is pending Render account authorization. No public application URL has been verified yet. The source is available at [Scofari/moldova-geowatch](https://github.com/Scofari/moldova-geowatch).
+[Open Moldova GeoWatch](https://moldova-geowatch.onrender.com/) · [API health](https://moldova-geowatch.onrender.com/api/health) · [Source code](https://github.com/Scofari/moldova-geowatch)
+
+Public HTTPS, persistent reports, two-client WebSocket updates and mobile layout were verified on 2026-10-05. Free compute sleeps when idle, so the first request can take about a minute. [Verification evidence](docs/VERIFICATION.md).
 
 ## What it does
 
@@ -98,7 +100,7 @@ Before production-mode API startup, explicitly set `DATABASE_URL`, `NODE_ENV=pro
 
 The selected €0 architecture uses one Render Free Node service for the frontend, NestJS API and Socket.IO, plus Supabase Free PostgreSQL/PostGIS. The backend serves the compiled Vite frontend on the same HTTPS origin, so relative API/WebSocket URLs work without exposing backend secrets to the browser. Render handles HTTPS; the database connection verifies TLS certificates.
 
-The cloud database is provisioned and its migrations/indexes verified; application deployment awaits Render sign-in and private database connection configuration. See [deployment instructions, costs, limitations and pending public checks](docs/DEPLOYMENT.md). The committed [Render Blueprint](render.yaml) explicitly selects Free compute. No public deployment success is claimed.
+The application is live at [moldova-geowatch.onrender.com](https://moldova-geowatch.onrender.com/). Supabase migrations, spatial indexes and private Data API access are verified. See [deployment instructions, costs and limitations](docs/DEPLOYMENT.md). The committed [Render Blueprint](render.yaml) selects Free compute. The current public-repository connection uses manual Render deployments after a normal GitHub push.
 
 ## Environment Variables
 

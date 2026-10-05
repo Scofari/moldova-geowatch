@@ -1,6 +1,11 @@
 # Production deployment
 
-Status: source published to GitHub; free Supabase database provisioned and migrations verified. Render account sign-in is still required. No public application or health URL has been verified. Local tests do not establish public deployment success.
+Status: publicly deployed and verified on 2026-10-05. Render Free serves the frontend, NestJS API and Socket.IO; Supabase Free provides PostgreSQL/PostGIS with verified TLS. Public E2E covered application commit `c34c19a`. Later documentation-only commits do not change the runtime.
+
+- Frontend: [Moldova GeoWatch](https://moldova-geowatch.onrender.com/)
+- Backend: [API health](https://moldova-geowatch.onrender.com/api/health), under the same HTTPS origin
+- Source: [Scofari/moldova-geowatch](https://github.com/Scofari/moldova-geowatch), branch `main`
+- Evidence: [public verification record](VERIFICATION.md)
 
 ## Architecture and decision
 
@@ -18,15 +23,17 @@ Official documentation checked on 2026-10-04:
 
 Expected cost is **€0/month only while both accounts remain on Free, no paid add-ons/resources are selected, and usage stays within allowances**. Do not add a payment method as part of this setup. Render can bill bandwidth/build overages when a payment method already exists; inspect workspace billing before provisioning. Without a payment method, exhaustion suspends services or builds instead. If any step requires payment details or a paid resource, stop and obtain the owner's approval.
 
-| Component            | Free limitations                                                                                                                                                      |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Render app           | 0.1 CPU, 512 MB RAM; 750 running instance hours per workspace/month, shared with other free services; ephemeral filesystem; no persistent disk                        |
-| Render idle behavior | Spins down after 15 minutes without incoming HTTP/WebSocket traffic; restart takes about a minute. Free service can restart at any time                               |
-| Render usage         | Bandwidth and build-minute quotas are workspace-wide. Check the dashboard's current included usage and billing settings; do not assume a fixed allowance across plans |
-| WebSockets           | Supported over WSS on the HTTP port; no fixed connection-duration limit, but restarts/deploys disconnect clients; outgoing messages consume bandwidth                 |
-| Supabase             | 500 MB database, shared CPU/500 MB RAM, 5 GB egress, maximum two active free projects; inactive projects can pause after a week; automatic backups/PITR excluded      |
+| Component            | Free limitations                                                                                                                                                 |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Render app           | 0.1 CPU, 512 MB RAM; 750 running instance hours per workspace/month, shared with other free services; ephemeral filesystem; no persistent disk                   |
+| Render idle behavior | Spins down after 15 minutes without incoming HTTP/WebSocket traffic; restart takes about a minute. Free service can restart at any time                          |
+| Render usage         | Dashboard inspection showed 5 GB bandwidth and 500 pipeline minutes per month, shared across the workspace. Recheck billing/quotas before future changes         |
+| WebSockets           | Supported over WSS on the HTTP port; no fixed connection-duration limit, but restarts/deploys disconnect clients; outgoing messages consume bandwidth            |
+| Supabase             | 500 MB database, shared CPU/500 MB RAM, 5 GB egress, maximum two active free projects; inactive projects can pause after a week; automatic backups/PITR excluded |
 
 The existing Socket.IO reconnect handling and polling reconcile missed updates. Polling and heartbeats can keep the service active and consume hours/bandwidth; they are not an uptime guarantee. Do not add artificial keep-awake jobs. The first browser load may require retrying after a cold start. A paused database requires owner restoration through Supabase.
+
+The workspace billing inspection showed no card on file. No payment method, paid compute, disk, Render database, database branch or IPv4 add-on was created during this deployment.
 
 ## Database provision and migration
 
@@ -71,18 +78,22 @@ Optional backend provider settings are `WEATHER_BASE_URL` and `GEOCODING_BASE_UR
 3. Enter backend-only `DATABASE_URL` and `DATABASE_CA_CERT` into Render's secret fields. The Blueprint generates `IP_HASH_SALT` once; preserve it across redeploys so confirmations remain deduplicated.
 4. Build: `npm ci --include=dev && npm run build`. Start: `node apps/api/dist/main.js`. The API binds the platform `PORT` on `HOST=0.0.0.0`, applies migrations, and serves `apps/web/dist` when `SERVE_WEB=true`. HTTPS/WSS termination is provided by Render. Do not run Vite's preview server publicly.
 5. Verify the actual generated HTTPS URL, not a guessed hostname. Test `/api/health`, weather, rivers, search, reports and bbox querying; check deploy/runtime logs before calling it deployed.
-6. Redeploy from a normal GitHub push. Use a single instance: caches/throttles/broadcasts are process-local. Expanding to multiple instances requires shared quotas/cache, a Socket.IO adapter and appropriate load-balancer settings.
+6. Push normally to GitHub, then choose **Manual Deploy → Deploy latest commit** on the existing Render service. This deployment uses the public repository URL: Render's logs explicitly say it clones the public repository without Git provider access. Automatic push-triggered deployment is not verified. A future scoped GitHub connection can enable that workflow after owner authorization. Use one instance: expanding requires shared quotas/cache, a Socket.IO adapter and appropriate load-balancer settings.
+
+If startup reports `self-signed certificate in certificate chain`, check that `DATABASE_CA_CERT` contains the complete official PEM, including real newlines. If it reports `password authentication failed`, the owner must correct the current URL/password in Render; do not disclose it or disable TLS. These issues were resolved before the successful live deployment.
+
+Keep `Referrer-Policy: strict-origin-when-cross-origin` on the frontend. Helmet's `no-referrer` default caused OpenStreetMap tiles to return blocked images during public E2E. The corrected policy sends only the origin across sites; real tiles rendered after deployment. Attribution, browser caching and the provider's tile policy remain required.
 
 ## Public acceptance checklist
 
-All of these remain **pending** until an actual public deployment is accessible:
+Completed on the public HTTPS deployment on 2026-10-05:
 
 - HTTPS page load; Moldova geography, pan/zoom, actual modeled weather and details.
 - Nistru and Prut real paths; visibly DEMO water levels; independent layer toggles and Orhei search.
 - Create an explicitly identified temporary verification report; refresh and confirm persistence.
 - Two separate clients receive creation/confirmation events without refresh; confirmation count updates, duplicate confirmation is rejected.
 - Public bbox inclusion/exclusion and category filters; mobile viewport; no mixed content, critical console errors or unexpected backend errors.
-- Remove only the temporary report's exact recorded ID using a private parameterized database query. Never seed invented incidents or delete unrelated reports.
+- Remove only the temporary report's exact recorded ID using a private guarded database query. Final report and confirmation counts were zero. Never seed invented incidents or delete unrelated reports.
 - Record actual URLs, deployed commit and evidence in README/verification documentation, rerun repository checks and push a normal follow-up commit.
 
 Do not point the local integration runner at production. It deliberately submits several test reports and exercises limits. Public write tests require an isolated, clearly named temporary verification record and exact-ID cleanup.
